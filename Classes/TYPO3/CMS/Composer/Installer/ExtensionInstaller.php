@@ -163,7 +163,10 @@ class ExtensionInstaller implements \Composer\Installer\InstallerInterface {
 		}
 		if (empty($extensionKey)) {
 			list(, $extensionKey) = explode('/', $package->getName(), 2);
+			$extensionKey = $this->filterExtensionKey($extensionKey);
 			$extensionKey = str_replace('-', '_', $extensionKey);
+		} else {
+			$extensionKey = $this->filterExtensionKey($extensionKey);
 		}
 		return $this->extensionDir . DIRECTORY_SEPARATOR . $extensionKey;
 	}
@@ -212,5 +215,19 @@ class ExtensionInstaller implements \Composer\Installer\InstallerInterface {
 	protected function initializeExtensionDir() {
 		$this->filesystem->ensureDirectoryExists($this->extensionDir);
 		$this->extensionDir = realpath($this->extensionDir);
+	}
+
+	/**
+	 * Filter extension key to allow names like
+	 * "vendor/project-typo3-cms-extension-extensionname" or "vendor/typo3-cms-extension-extensionname"
+	 *
+	 * @param string $extensionKey
+	 * @return string
+	 */
+	private function filterExtensionKey($extensionKey) {
+		if (FALSE !== strpos($extensionKey, 'typo3-cms-extension')) {
+			return trim(substr($extensionKey, strpos($extensionKey, 'typo3-cms-extension') + 19), '-_');
+		}
+		return $extensionKey;
 	}
 }
